@@ -1,3 +1,5 @@
+console.log('user.js loaded');
+
 $(document).ready(function(){
   		var a = $("header .logo-bar .link-logo").clone();
   		var b = $("header .logo-bar .basket").detach();
