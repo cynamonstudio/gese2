@@ -1,0 +1,891 @@
+{include file='header.tpl'}
+
+<body{if $body_id} id="{$body_id|escape}"{/if}{if $body_class} class="{$body_class|escape}"{/if}>
+    {include file='body_head.tpl'}
+    <div class="main row">
+        <div class="innermain container">
+            <div class="s-row">
+                {if 0 < $boxes_left_side|@count}
+                    <div class="leftcol large s-grid-3">
+                        {dynamic}
+                            {foreach from=$boxes_left_side item=v key=k}
+                                {box file="../boxes/$v/box.tpl" box="$k"}
+                            {/foreach}
+                        {/dynamic}
+                    </div>
+                {/if}
+
+                <div class="centercol {if ($boxes_left_side|@count == 0) and ($boxes_right_side|@count == 0)}s-grid-12{elseif 0 != $boxes_left_side|@count and $boxes_right_side|@count != 0}s-grid-6{else}s-grid-9{/if}" itemscope itemtype="{$schema}://schema.org/Product">
+                    {dynamic}
+                        {if $boxes_top_side|@count > 0}
+                        <div data-boxes-side="0">
+                        {foreach from=$boxes_top_side item=v key=k}
+                            {box file="../boxes/$v/box.tpl" box="$k"}
+                        {/foreach}
+                        </div>
+                        {/if}
+                    {/dynamic}
+
+                    {if 1 == $product->translation->active || $adminPreview == true}
+                        <div class="box row" id="box_productfull" data-category="{$product->defaultCategory->translation->name|escape}">
+                            <div class="boxhead">
+                                <h1 class="name" itemprop="name">
+                                    {$product->translation->name|escape}
+                                </h1>
+                            </div>
+
+                            <div class="innerbox product-main-box" data-loading="{translate key="File upload in progress"}...">
+                                <div class="maininfo row">
+                                    <div class="f-row">
+                                        {include file='product/gallery.tpl'}
+                                        <div class=" f-grid-6">
+                                            <div class="availability row">
+                                                {if $product->defaultStock &&
+                                                    ( 1 == $skin_settings->productdetails->availability ||
+                                                    ( 1 == $skin_settings->productdetails->time && $product->canBuyStock() )
+                                                )}
+                                                    <div class="row">
+                                                        {if 1 == $skin_settings->productdetails->availability && $product->defaultStock->availability && $product->defaultStock->availability->translation}
+                                                            <div class="row availability">
+                                                                <span class="first">{translate key="Availability"}:</span>
+                                                                {if $product->defaultStock->availability->availability->photo}
+                                                                    <img src="{baseDir}/{$product->defaultStock->availability->getUrl()}" alt="">
+                                                                {/if}
+                                                                <span class="second">{$product->defaultStock->availability->translation->name|escape}</span>
+                                                            </div>
+                                                        {/if}
+
+                                                        {if $product->canBuyStock() && 1 == $skin_settings->productdetails->time && $product->defaultStock->delivery}
+                                                            <div class="delivery">
+                                                                <span class="first">{translate key="Dispatched within"}:</span>
+                                                                <span class="second">{$product->defaultStock->delivery->translation->name|escape}</span>
+                                                            </div>
+                                                        {/if}
+                                                    </div>
+                                                {/if}
+
+                                                {if $product->product->producer_id}
+                                                    <meta itemprop="brand" content="{$product->producer->manufacturer->name|escape}">
+                                                {/if}
+                                            </div>
+
+                                            <div class="bottomborder row" itemprop="offers" itemscope itemtype="{$schema}://schema.org/Offer">
+                                                <div class="basket">
+                                                    {if $loyalty_exchange}
+                                                        <div class="price">
+                                                            <span class="price-name">{translate key="Price"}:</span>
+                                                            <em>{$product->defaultStock->loyaltyPointsPrice(true)|escape}</em>
+                                                        </div>
+                                                    {elseif $showprices}
+                                                        <!-- mod -->
+                                                        {if $user_logged && $user->user->isInGroup(1)}
+                                                            <div class="price-netto">
+                                                                {if $price_mode == '1'}
+                                                                    <span class="price-name">{translate key="Net price"}:</span>
+                                                                {else}
+                                                                    <span class="price-name">{translate key="Price"}:</span>
+                                                                {/if}
+                                                                {if $product->specialOffer}
+                                                                    <em class="main-price" {if $price_mode == '1'}class="no-color"{/if}>{currency value=$product->defaultStock->getSpecialOfferPrice(true)}</em>
+                                                                    {if $price_mode == '2'}
+                                                                        <span class="none" itemprop="price">
+                                                                            {currency value=$product->defaultStock->getSpecialOfferPrice(true) float_currency=true}
+                                                                        </span>
+                                                                    {/if}
+                                                                    <del>{currency value=$product->defaultStock->getPrice(true)}</del>
+                                                                    {if $product->currency and $currency->getIdentifier() != $product->currency->getIdentifier()}
+                                                                        <em  class="default-currency">({currency id=$product->product->currency_id rate=1 value=$product->defaultStock->getCurrencySpecialOfferPrice(true)})</em>
+                                                                    {/if}
+                                                                {else}
+                                                                    <em class="main-price" {if $price_mode == '1'}class="no-color"{/if}>{currency value=$product->defaultStock->getPrice(true)}</em>
+                                                                    {if $price_mode == '2'}
+                                                                        <span class="none" itemprop="price">
+                                                                            {currency value=$product->defaultStock->getPrice(true) float_currency=true}
+                                                                        </span>
+                                                                    {/if}
+                                                                    {if $product->currency and $currency->getIdentifier() != $product->currency->getIdentifier()}
+                                                                        <em class="default-currency">({currency id=$product->product->currency_id rate=1 value=$product->defaultStock->getCurrencyPrice(true)})</em>
+                                                                    {/if}
+
+                                                                    {if $product->isBundle() && $original_bundle_products_price !== false}
+                                                                        <del class="original-bundle-price">
+                                                                            {translate key="instead of"} {currency value=$original_bundle_products_net_price}
+                                                                        </del>
+                                                                    {/if}
+                                                                {/if}
+                                                            </div>
+
+                                                            {if $additional_tax_info == '1'}
+                                                                {assign var=productTax value=$product->getTax()}
+                                                                <div class="tax-additional-info tax-net">
+                                                                    {if $product->defaultStock->getPrice() != $product->defaultStock->getPrice(true)}
+                                                                        <span>{translate key="excl. %s TAX, excl. shipping costs" s1=$productTax->taxValue->name}</span>
+                                                                    {else}
+                                                                        <span>{translate key="excl. shipping costs"}</span>
+                                                                    {/if}
+                                                                </div>
+                                                            {/if}
+                                                        {else}
+                                                            <div class="price">
+                                                                <span class="price-name">{translate key="Price"}:</span>
+                                                                {if $product->specialOffer}
+                                                                    <em class="main-price color">{currency value=$product->defaultStock->getSpecialOfferPrice()}</em>
+                                                                    <del>{currency value=$product->defaultStock->getPrice()}</del>
+                                                                    <span class="none" itemprop="price">
+                                                                        {currency value=$product->defaultStock->getSpecialOfferPrice() float_currency=true}
+                                                                    </span>
+                                                                    {if $product->currency and $currency->getIdentifier() != $product->currency->getIdentifier()}
+                                                                        <em  class="default-currency">({currency id=$product->product->currency_id rate=1 value=$product->defaultStock->getCurrencySpecialOfferPrice()})</em>
+                                                                    {/if}
+                                                                {else}
+                                                                    <del class="none"></del>
+                                                                    
+                                                                    <em class="main-price">{currency value=$product->defaultStock->getPrice()}</em>
+                                                                    <span class="none" itemprop="price">
+                                                                        {currency value=$product->defaultStock->getPrice() float_currency=true}
+                                                                    </span>
+                                                                    {if $product->currency and $currency->getIdentifier() != $product->currency->getIdentifier()}
+                                                                        <em class="default-currency">({currency id=$product->product->currency_id rate=1 value=$product->defaultStock->getCurrencyPrice()})</em>
+                                                                    {/if}
+
+                                                                    {if $product->isBundle() && $original_bundle_products_price !== false}
+                                                                        <del class="original-bundle-price">
+                                                                            {translate key="instead of"} {currency value=$original_bundle_products_price}
+                                                                        </del>
+                                                                    {/if}
+                                                                {/if}
+                                                            </div>
+                                                        {/if}
+
+                                                        <meta itemprop="priceCurrency" content="{$currency->currency->name|escape}">
+                                                    {/if}
+                                                    
+                                                    {if $product->getRichSnippetForAvailability() == 'instore_only'}
+                                                        <link itemprop="availability" href="{$schema}://schema.org/InStoreOnly" />
+                                                    {elseif $product->getRichSnippetForAvailability() == 'out_of_stock'}
+                                                        <link itemprop="availability" href="{$schema}://schema.org/OutOfStock" />
+                                                    {else}
+                                                        <link itemprop="availability" href="{$schema}://schema.org/InStock" />
+                                                    {/if}
+
+                                                    {if floatval($product->product->other_price)}
+                                                        {if $user_logged}
+                                                            <div class="otherprice">
+                                                                <span class="otherprice-name">{translate key="Price in other stores"}:</span>
+                                                                <em>{currency value=$product->product->other_price}</em>
+                                                            </div>
+                                                        {/if}
+                                                    {/if}
+
+                                                    <form class="form-basket{if false == $product->canBuyStock() && ($enable_availability_notifier && $product->isEnabledNotifier()) == false} none{/if}{if $loyalty_exchange} loyaltyexchange{/if}" method="post" action="{route key=$basketAddRoute stockId='post'}" enctype="multipart/form-data">
+                                                        {assign var=options value=$product->getOptionsConfigurationStruct()}
+                                                        {if $product->product->group_id && count($options)}
+                                                            {assign var="stocks_flag" value="true"}
+                                                            <div class="stocks">
+                                                                {foreach from=$options item=option}
+                                                                    {if (0 == $option.stock && count($option.values) > 0) || 1 == $option.stock || $option.type == 'file' || $option.type == 'text' || $option.type == 'checkbox'}
+                                                                    <div class="f-row">
+                                                                        {if $option.type !== 'select'}
+                                                                            <div class="label f-grid-6">
+                                                                                <label for="option_{$option.id|escape}" class="label">
+                                                                                    {if 1 == $option.required}
+                                                                                        {if $product->canBuyStock()}
+                                                                                        {assign var="requiredField" value=true}
+                                                                                        {/if}
+                                                                                    <em class="color">*</em>
+                                                                                    {/if}
+                                                                                    {$option.name|escape}:
+                                                                                </label>
+                                                                            </div>
+                                                                        {/if}
+                                                                        <div class="stock-options f-grid-6{if $option.type == 'select'} no-label{/if}">
+                                                                            {if  $option.type == 'file'}
+                                                                            <div class="option_{$option.type|escape}{if 1 == $option.stock} option_truestock{/if}{if 1 == $option.required} option_required{/if}">
+                                                                                <input type="file" id="option_{$option.id|escape}" name="option_{$option.id|escape}"/>
+                                                                            </div>
+                                                                            {elseif  $option.type == 'text'}
+                                                                            <div class="option_{$option.type|escape}{if 1 == $option.stock} option_truestock{/if}{if 1 == $option.required} option_required{/if}">
+                                                                                <div class="shaded_inputwrap inputwrap">
+                                                                                    <input type="text" id="option_{$option.id|escape}" name="option_{$option.id|escape}" value="" />
+                                                                                </div>
+                                                                            </div>
+                                                                            {elseif  $option.type == 'checkbox'}
+                                                                            <div class="option_{$option.type|escape}{if 1 == $option.stock} option_truestock{/if}{if 1 == $option.required} option_required{/if}">
+                                                                                <span class="checkbox-wrap-yesno">
+                                                                                    <input type="checkbox" id="option_{$option.id|escape}" name="option_{$option.id|escape}" value="1" />
+                                                                                    <label data-yes="{translate key="YES"}" data-no="{translate key="NO"}" for="option_{$option.id|escape}"></label>
+                                                                                </span>
+                                                                            </div>
+                                                                            {elseif  $option.type == 'radio'}
+                                                                            <div class="option_{$option.type|escape}{if 1 == $option.stock} option_truestock{/if}{if 1 == $option.required} option_required{/if}">
+                                                                                {foreach from=$option.values item=value}
+                                                                                    <span class="radio-wrap">
+                                                                                        <input type="radio" id="option_{$option.id|escape}_{$value.id|escape}" name="option_{$option.id|escape}" value="{$value.id|escape}" />
+                                                                                        <label for="option_{$option.id|escape}_{$value.id|escape}"></label>
+                                                                                    </span>
+                                                                                    <label for="option_{$option.id|escape}_{$value.id|escape}">{$value.name|escape}</label> <br />
+                                                                                {/foreach}
+                                                                            </div>
+                                                                            {elseif  $option.type == 'color'}
+                                                                            <div class="option_{$option.type|escape}{if 1 == $option.stock} option_truestock{/if}{if 1 == $option.required} option_required{/if}">
+                                                                                <select id="option_{$option.id|escape}" name="option_{$option.id|escape}">
+                                                                                    <option value="" title="">{translate key='choose'}</option>
+                                                                                {foreach from=$option.values item=value}
+                                                                                    <option value="{$value.id|escape}" title="{$value.color|escape}">{$value.name|escape}</option>
+                                                                                {/foreach}
+                                                                                </select>
+                                                                            </div>
+                                                                            {elseif  $option.type == 'select' && $stocks_flag == "true"}
+                                                                                {if $enablebasket}
+                                                                                    {assign var="stocks_flag" value="false"}
+                                                                                    <table class="stocks_table">
+                                                                                        <tbody>
+                                                                                            {assign var=stocks value=null}
+                                                                                            {assign var=sortedOptions value=null}
+                                                                                            {foreach from=$product->optionsStock item=stock}
+                                                                                                {assign var=temp4 value=$stock->getIdentifier()}
+                                                                                                {append var=stocks value=$stock index=$stock->getIdentifier()}
+                                                                                                {foreach from=$stock->values item=sv}
+                                                                                                    {if $sv->option->translation->name == 'Długość'}
+                                                                                                        {assign var=ovalueId value=$sv->ovalue->getIdentifier()}
+                                                                                                        {assign var=prevStocks value=$sortedOptions.$ovalueId}
+                                                                                                        {append var=prevStocks value=$stock->getIdentifier()}
+                                                                                                        {append var=sortedOptions value=$prevStocks index=$ovalueId}
+                                                                                                    {/if}
+                                                                                                {/foreach}
+                                                                                            {/foreach}
+                                                                                            {if $sortedOptions|@count > 0}
+                                                                                                {foreach from=$sortedOptions item=sortedStocks}
+                                                                                                    {foreach from=$sortedStocks item=stockId key=key}
+                                                                                                        {assign var=stock value=$stocks.$stockId}
+                                                                                                        {if $stock->stock->stock !== "0"}
+                                                                                                            {if $key == 0}
+                                                                                                                {foreach from=$stock->values item=sv}
+                                                                                                                    {if $sv->option->translation->name == 'Długość'}
+                                                                                                                        <tr><th colspan="5">{$sv->ovalue->translation->value}</th></tr>
+                                                                                                                    {/if}
+                                                                                                                {/foreach}
+                                                                                                            {/if}
+                                                                                                            <tr data-id="{$stock->getIdentifier()}">
+                                                                                                                <td class="cell_image">
+                                                                                                                    <img class="" src="{imageUrl type='productGfx' width=$skin_settings->img->small height=$skin_settings->img->small image=$stock->gfx->unic_name}" alt="{$stock->gfx->name|escape}">
+                                                                                                                </td>
+                                                                                                                <td class="cell_options">
+                                                                                                                    {assign var=options value=null}
+                                                                                                                    {foreach from=$stock->values item=sv}
+                                                                                                                        {append var=options value=$sv->ovalue->getIdentifier() index=$sv->option->getIdentifier()}
+                                                                                                                        {if $sv->option->translation->name == "Gramatura"}
+                                                                                                                            {assign var="mod_weight" value=$sv->ovalue->translation->value}
+                                                                                                                        {/if}
+
+                                                                                                                        <div>{$sv->option->translation->name}: {$sv->ovalue->translation->value}</div>
+                                                                                                                    {/foreach}
+                                                                                                                    <input type="hidden" class="options" value='{$options|@json_encode}'>
+                                                                                                                </td>
+                                                                                                                <td class="cell_price">
+                                                                                                                    {if $user_logged && $user->user->isInGroup(1)}
+                                                                                                                        {if $stock->getSpecialOfferPrice(true) != $stock->getPrice(true)}
+                                                                                                                            <div>{currency value=$stock->getSpecialOfferPrice(true)}</div>
+                                                                                                                            <del>{currency value=$stock->getPrice(true)}</del>
+                                                                                                                        {else}
+                                                                                                                            <div>{currency value=$stock->getPrice(true)}</div>
+                                                                                                                        {/if}
+                                                                                                                    {else}
+                                                                                                                        {if $stock->getSpecialOfferPrice() != $stock->getPrice()}
+                                                                                                                            <div>{currency value=$stock->getSpecialOfferPrice()}</div>
+                                                                                                                            <del>{currency value=$stock->getPrice()}</del>
+                                                                                                                        {else}
+                                                                                                                            <div>{currency value=$stock->getPrice()}</div>
+                                                                                                                        {/if}
+                                                                                                                    {/if}
+                                                                                                                </td>
+                                                                                                                <td class="cell_quantity">
+                                                                                                                    <div class="mx_ilosc">
+                                                                                                                        <i class="fa fa-minus mx_minus" aria-hidden="true"></i>
+                                                                                                                        <input type="number" name="" value="0" min="0" max="{$stock->stock->stock}">
+                                                                                                                        <i class="fa fa-plus mx_plus" aria-hidden="true"></i>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        dostępne:
+                                                                                                                        <span class="mx_avail">{$stock->stock->stock}</span>
+                                                                                                                    </div>
+                                                                                                                </td>
+                                                                                                                <td class="cell_button {if !$stock->availability->availability->can_buy}disabled{/if}">
+                                                                                                                    <button type="button" class="btn {if $stock->availability->availability->can_buy}btn-red{/if}">dodaj</button>
+                                                                                                                </td>
+                                                                                                            </tr>
+                                                                                                        {/if}
+                                                                                                    {/foreach}
+                                                                                                {/foreach}
+                                                                                            {elseif $product->optionsStock|@count > 0}
+                                                                                                <tr class="index">
+                                                                                                    <td class="cell_options">
+                                                                                                        {assign var=options value=null}
+                                                                                                        {foreach from=$stock->values item=sv}
+                                                                                                            {append var=options value=$sv->ovalue->getIdentifier() index=$sv->option->getIdentifier()}
+                                                                                                            <div>{$sv->option->translation->name}</div>
+                                                                                                        {/foreach}
+                                                                                                    </td>
+                                                                                                    <td class="cell_available">
+                                                                                                        <span>Na stanie</span>
+                                                                                                    </td>
+                                                                                                    <td class="cell_price">
+                                                                                                        {if $user_logged && $user->user->isInGroup(1)}
+                                                                                                            <span>Cena netto</span>
+                                                                                                        {else}
+                                                                                                            <span>Cena</span>
+                                                                                                        {/if}
+                                                                                                    </td>
+                                                                                                    <td class="cell_quantity">
+                                                                                                        <span>Ilość</span>
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                                {foreach from=$product->optionsStock item=stock}
+                                                                                                    {if $stock->stock->stock !== "0"}
+                                                                                                        <tr data-id="{$stock->getIdentifier()}" {if $stock->stock->stock == "0"}class='no-stock'{/if}>
+                                                                                                            <td class="cell_options">
+                                                                                                                {assign var=options value=null}
+                                                                                                                {foreach from=$stock->values item=sv}
+                                                                                                                    {append var=options value=$sv->ovalue->getIdentifier() index=$sv->option->getIdentifier()}
+                                                                                                                    {if $sv->option->translation->name == "Gramatura"}
+                                                                                                                        {assign var="mod_weight" value=$sv->ovalue->translation->value}
+                                                                                                                    {/if}
+                                                                                                                    <div>{$sv->ovalue->translation->value}</div>
+                                                                                                                {/foreach}
+                                                                                                                <input type="hidden" class="options" value='{$options|@json_encode}'>
+                                                                                                            </td>
+                                                                                                            <td class="cell_available">
+                                                                                                                <span class="mx_avail">{$stock->stock->stock}</span>
+                                                                                                            </td>
+                                                                                                            <td class="cell_price">
+                                                                                                                {if $user_logged && $user->user->isInGroup(1)}
+                                                                                                                        {if $stock->getSpecialOfferPrice(true) != $stock->getPrice(true)}
+                                                                                                                            <div>{currency value=$stock->getSpecialOfferPrice(true)}</div>
+                                                                                                                            <del>{currency value=$stock->getPrice(true)}</del>
+                                                                                                                        {else}
+                                                                                                                            <div>{currency value=$stock->getPrice(true)}</div>
+                                                                                                                        {/if}
+                                                                                                                    {else}
+                                                                                                                        {if $stock->getSpecialOfferPrice() != $stock->getPrice()}
+                                                                                                                            <div>{currency value=$stock->getSpecialOfferPrice()}</div>
+                                                                                                                            <del>{currency value=$stock->getPrice()}</del>
+                                                                                                                        {else}
+                                                                                                                            <div>{currency value=$stock->getPrice()}</div>
+                                                                                                                        {/if}
+                                                                                                                    {/if}
+                                                                                                            </td>
+                                                                                                            <td class="cell_quantity">
+                                                                                                                <div class="mx_ilosc">
+                                                                                                                    <i class="fa fa-minus mx_minus" aria-hidden="true"></i>
+                                                                                                                        <input type="number" name="" value="0" min="0" max="{$stock->stock->stock}">
+                                                                                                                        <i class="fa fa-plus mx_plus" aria-hidden="true"></i>
+                                                                                                                </div>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    {/if}
+                                                                                                {/foreach}
+                                                                                            {/if}
+                                                                                        </tbody>
+                                                                                    </table>
+
+                                                                                    {assign var=options value=$product->getOptionsConfigurationStruct()}
+                                                                                    {if $product->product->group_id && count($options)}
+                                                                                        <div class="stocks none mx-mod">
+                                                                                            {foreach from=$options item=option}
+                                                                                                {if (0 == $option.stock && count($option.values) > 0) || 1 == $option.stock || $option.type == 'file' || $option.type == 'text' || $option.type == 'checkbox'}
+                                                                                                <div class="f-row">
+                                                                                                    <div class="stock-options f-grid-6">
+                                                                                                        {if  $option.type == 'select'}
+                                                                                                            <div class="option_{$option.type|escape}{if 1 == $option.stock} option_truestock{/if}{if 1 == $option.required} option_required{/if}">
+                                                                                                                <select id="option_{$option.id|escape}" name="option_{$option.id|escape}">
+                                                                                                                {if 0 == $option.stock}
+                                                                                                                    <option value="" title="">{translate key='choose'}</option>
+                                                                                                                {/if}
+                                                                                                                {foreach from=$option.values item=value}
+                                                                                                                    <option value="{$value.id|escape}" data-option-id="{$option.id|escape}" class="mod-order">{$value.name|escape}</option>
+                                                                                                                {/foreach}
+                                                                                                                </select>
+                                                                                                            </div>
+                                                                                                        {/if}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                {/if}
+                                                                                            {/foreach}
+                                                                                        </div>
+                                                                                    {/if}
+                                                                                {/if}
+
+                                                                                <div class="options-value">
+                                                                                    <b>Wartość: <span id="value">0,00 zł</span></b>
+                                                                                </div>
+                                                                            {/if}
+                                                                        </div>
+                                                                    </div>
+                                                                    {/if}
+                                                                {/foreach}
+                                                            </div>
+                                                        {/if}
+
+                                                        <fieldset class="addtobasket-container{if false == $enablebasket || 0 == (int) $product->defaultStock->availability->availability->can_buy} none{/if}">
+                                                            <div class="quantity_wrap">
+                                                                <span class="quantity_name">{translate key="quantity"}</span>
+                                                                <span class="number-wrap">
+                                                                    <input name="quantity" value="{float precision=$QUANTITY_PRECISION value=1 trim=true}" type="{if $product->unit->unit->floating_point == 0}number{else}text{/if}" class="short inline">
+                                                                </span>
+                                                                <span class="unit">{$product->unit->translation->name|escape}</span>
+                                                                <input type="hidden" value="{$stock_id|escape}" name="stock_id">
+                                                                <input type="hidden" value="{$product->product->product_id}" name="product_id">
+                                                                <input type="hidden" value="1" name="nojs">
+
+                                                                {if $product->isBundle()}                                                          
+                                                                    <input type="hidden" value="{foreach from=$product->bundle->items item=item name=bundles}{$item->getIdentifier()}{if !$smarty.foreach.bundles.last},{/if}{/foreach}" name="bundle_stocks">
+                                                                {/if}
+                                                            </div>
+                                                            <div class="button_wrap">
+                                                                <button type="submit" class="addtobasket btn btn-red">
+                                                                    <img src="{baseDir}/public/images/1px.gif" alt="{translate key='Add to cart'}" class="px1">
+                                                                    <span>{if $loyalty_exchange}{translate key="Exchange"}{else}{translate key="Add to cart"}{/if}</span>
+                                                                </button>
+                                                                {if false !== $loyalty_points && !$loyalty_exchange}
+                                                                    <span class="loyalty_points{if 0 == $loyalty_points} none{/if}">
+                                                                        {translate key="You gain %s%s%s points [%s?%s]" p1='<span class="points">' p2=$loyalty_points p3='</span>' p4='<span class="tooltip_pointer">' p5='</span>'}
+                                                                        <label class="tooltip" id="loyalty_msg">
+                                                                            {if $loyalty_msg_title}
+                                                                                <span class="title">{$loyalty_msg_title|escape}</span>
+                                                                            {/if}
+                                                                            {foreach from=$loyalty_msgs item=loyalty_msg}
+                                                                                <span>{$loyalty_msg|escape}</span>
+                                                                            {/foreach}
+                                                                        </label>
+                                                                    </span>
+                                                                {/if}
+                                                            </div>
+                                                        </fieldset>
+                                                            
+                                                        {if $enable_availability_notifier}
+                                                            {dynamic}
+                                                                {assign var="availabilityNotifyUser" value=$product->defaultStock->getAvailabilityNotifyByUser()}
+                                                                <fieldset class="availability-notifier-container{if $availabilityNotifyUser != null || 1 == (int) $product->defaultStock->availability->availability->can_buy} none{/if}">
+                                                                    <div class="button_wrap">
+                                                                        <button type="submit" class="availability-notifier-btn btn btn-red" data-is-logged="{if true == $user_logged}true{else}false{/if}" data-stock-id="{$product->defaultStock->stock->stock_id}" data-product-id="{$product->product->product_id}" data-product-name="{$product->translation->name|escape}">
+                                                                            <img src="{baseDir}/public/images/1px.gif" alt="" class="px1">
+                                                                            <span>{translate key="notify of product availability"}</span>
+                                                                        </button>
+                                                                    </div>
+                                                                </fieldset>
+                                                                {if true == $user_logged}
+                                                                    <fieldset class="availability-notifier-unsubscribe-container{if $availabilityNotifyUser == null || 1 == (int) $product->defaultStock->availability->availability->can_buy} none{/if}">
+                                                                        <div class="button_wrap">
+                                                                            <button type="submit" class="availability-notifier-unsubscribe-btn btn btn-red" data-stock-id="{$product->defaultStock->stock->stock_id}">
+                                                                                <img src="{baseDir}/public/images/1px.gif" alt="" class="px1">
+                                                                                <span>{translate key="cancel notify"}</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    </fieldset>
+                                                                {/if}
+                                                            {/dynamic}
+                                                        {/if}
+                                                    </form>
+                
+                                                                
+                                                    {if 1 == $skin_settings->productdetails->storage}
+                                                        <a href="{route key='favouriteAdd' stockId=$product->defaultStock->getIdentifier()}" title="{translate key='add to wish list'}" class="addtofav">
+                                                            <img src="{baseDir}/public/images/1px.gif" alt="" class="px1">
+                                                            <span>{translate key="add to wish list"}</span>
+                                                        </a>
+                                                    {/if}
+
+                                                    {if $requiredField}
+                                                    <div>
+                                                        <span><em class="color">*</em> - {translate key="Field mandatory"}</span>
+                                                    </div>
+                                                    {/if}
+                                                </div>
+                                                    
+                                                {if 1 == $skin_settings->productdetails->score || 1 == $skin_settings->productdetails->producer || 1 == $skin_settings->productdetails->code ||
+                                                    1 == $skin_settings->productdetails->storage || 1 == $skin_settings->productdetails->recommend || ($can_comment && 1 == $skin_settings->productdetails->comments) }
+
+                                                    <div class="productdetails-more-details clearfix">
+                                                        {if 1 == $skin_settings->productdetails->score || 1 == $skin_settings->productdetails->producer || 1 == $skin_settings->productdetails->code}
+                                                            <div class="productdetails-more row">
+                                                                {if 1 == $skin_settings->productdetails->score}
+                                                                    <div class="row evaluation">
+                                                                        {if !$can_vote}
+                                                                            <em class="vote-message voted-message">{translate key="You already rated"}!</em>
+                                                                        {/if}
+                                                                        <em class="vote-message">{translate key="Rating"}:</em>
+                                                                        <span class="votestars"{if $can_vote} id="votestars_{$product->getIdentifier()|escape}"{/if}>
+                                                                            {foreach from=$vote_stars item=star name=list}
+                                                                                <img src="{baseDir}/public/images/1px.gif" alt="" class="px1 star{$star|escape|replace:'.':'-'}">
+                                                                            {/foreach}
+                                                                        </span>
+                                                                        <span class="none">
+                                                                            {$product->vote->rate}
+                                                                        </span>
+                                                                    </div>
+                                                                {/if}
+
+                                                                {if 1 == $skin_settings->productdetails->producer}
+                                                                    <div class="row manufacturer">
+                                                                        <em>{translate key="Vendor"}: </em>
+                                                                        {if $product->product->producer_id}
+                                                                            {if $product->producer->manufacturer->web}
+                                                                            <a target="_blank" rel="noopener" class="brand" href="{$product->producer->manufacturer->web}" title="{$product->producer->manufacturer->name|escape}">
+                                                                            {else}
+                                                                            <a class="brand" href="{route function='producer' key=$product->producer->getIdentifier() producerName=$product->producer->manufacturer->name producerId=$product->producer->getIdentifier()
+                                                                                    page=1 sort=1 view=$view}" title="{$product->producer->manufacturer->name|escape}">
+                                                                            {/if}
+                                                                            {if $product->producer->manufacturer->gfx}
+                                                                                <img src="{baseDir}/{$product->producer->getUrl()}" alt="{$product->producer->manufacturer->name|escape}" />
+                                                                            {else}
+                                                                                {$product->producer->manufacturer->name|escape}
+                                                                            {/if}
+                                                                            </a>
+                                                                        {else}
+                                                                            -
+                                                                        {/if}
+                                                                    </div>
+                                                                {/if}
+                                                                
+                                                                <meta itemprop="category" content="{$product->defaultCategory->translation->name}" />     
+
+                                                                {if 1 == $skin_settings->productdetails->code}
+                                                                    <div class="row code">
+                                                                        <em>{translate key="Product code"}:</em> 
+                                                                        <span>{$product->getDefaultCode()|escape}</span>
+                                                                    </div>
+                                                                {/if}
+                                                            </div>
+                                                        {/if}
+
+                                                        <ul class="row links-q">
+                                                            {if 1 == $skin_settings->productdetails->question}
+                                                                <li class="question">
+                                                                    <a data-href="{route key='productQuestion' productId=$product->getIdentifier()}" title="{translate key='ask about product'}" class="question ajaxlayer">
+                                                                        <img src="{baseDir}/public/images/1px.gif" alt="" class="px1">
+                                                                        <span>{translate key="ask about product"}</span>
+                                                                    </a>
+                                                                </li>
+                                                            {/if}
+              
+                                                            {if 1 == $skin_settings->productdetails->recommend}
+                                                                <li class="mailfriend">
+                                                                    <a href="{route key='productMailFriend' productId=$product->getIdentifier()}" title="{translate key='recommend to a friend'}" class="mailfriend">
+                                                                        <img src="{baseDir}/public/images/1px.gif" alt="" class="px1">
+                                                                        <span>{translate key="recommend to a friend"}</span>
+                                                                    </a>
+                                                                </li>
+                                                            {/if}
+                                                            {if false != $product_comments && 1 == $skin_settings->productdetails->comments}
+                                                                {if $can_comment}
+                                                                    <li class="comment">
+                                                                        <a href="#commentform" title="{translate key='add your review'}" class="comment addcomment">
+                                                                            <img src="{baseDir}/public/images/1px.gif" alt="" class="px1" />
+                                                                            <span>{translate key="add your review"}</span>
+                                                                        </a>
+                                                                    </li>
+                                                                {else}
+                                                                    <li class="comment">
+                                                                        <a href="#" title="{translate key='Only registered users can add reviews.'}" class="comment addcomment alert-modal">
+                                                                            <img src="{baseDir}/public/images/1px.gif" alt="" class="px1">
+                                                                            <span>{translate key="add your review"}</span>
+                                                                        </a>
+                                                                    </li>
+                                                                {/if}
+                                                            {/if}
+                                                            
+                                                            {plugin module=shop template=product-links product=$product}
+                                                        </ul>
+                                                    </div>
+                                                {/if}
+                                                    
+                                                {if 1 == $skin_settings->productdetails->fb_send || 1 == $skin_settings->productdetails->fb_like || 1 == $skin_settings->productdetails->google_p1 || 1 == $skin_settings->productdetails->pinit || 1 == $skin_settings->productdetails->fb_share}
+                                                    <div class="fb_buttons row">
+                                                        {if 1 == $skin_settings->productdetails->google_p1}
+                                                        <g:plusone size="medium"></g:plusone>
+                                                        {/if}
+
+                                                        {if 1 == $skin_settings->productdetails->fb_send}
+                                                        <fb:send href="{route full=true function='product' key=$product->product->product_id productName=$product->translation->name productId=$product->product->product_id}" font="tahoma"></fb:send>
+                                                        {/if}
+
+                                                        {if 1 == $skin_settings->productdetails->fb_share}
+                                                        <div class="fb-share-button" data-href="{route full=true function='product' key=$product->product->product_id productName=$product->translation->name productId=$product->product->product_id}" data-layout="button_count" data-size="small" data-mobile-iframe="true"><a class="fb-xfbml-parse-ignore" target="_blank" ref="noopener" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdevelopers.facebook.com%2Fdocs%2Fplugins%2F&amp;src=sdkpreparse">Udostępnij</a></div>
+                                                        {/if}
+
+                                                        {if 1 == $skin_settings->productdetails->fb_like}
+                                                        <fb:like href="{route full=true function='product' key=$product->product->product_id productName=$product->translation->name productId=$product->product->product_id}" send="false" layout="button_count" show_faces="true" width="110" font="tahoma"></fb:like>
+                                                        {/if}
+
+                                                        {if 1 == $skin_settings->productdetails->pinit && $product->mainGfx->gfx->unic_name}
+                                                        <a href="{if $isHttps}https{else}http{/if}://pinterest.com/pin/create/button/?url={route full=true function='product' key=$product->product->product_id productName=$product->translation->name productId=$product->product->product_id}&amp;media={imageUrl type='productGfx' width=$skin_settings->productdetails->imgwidth height=$skin_settings->productdetails->imgheight image=$product->mainGfx->gfx->unic_name fullurl=true}&amp;description={$product->translation->name|escape}" count-layout="horizontal"><img alt="Pin It" src="//assets.pinterest.com/images/pidgets/pin_it_button.png" title="Pin It" /></a>
+                                                        {/if}
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {if (false !== $product_comments && 1 == $skin_settings->productdetails->comments)
+                            || (count($related_products) && 1 == $skin_settings->productdetails->related)
+                            || (count($galleryGfxs) > 1 && 1 == (int) $skin_settings->productdetails->miniaturesposition)
+                            || strlen(trim($product->translation->description)) || count($product->files)
+                            || count($attrs)
+                            || $product->isBundle()
+                        }
+                            <div class="product-modules{if $skin_settings->productdetails->tabs} active none{/if}">
+                                {if $product->isBundle()}
+                                    {include file="product/bundle.tpl"}
+                                {/if}
+                                {include file="product/description.tpl"}
+                                {include file="product/attributes.tpl"}
+                                {include file="product/gallery-tab.tpl"}
+                                {include file="product/related.tpl"}
+                                {include file="product/comments.tpl"}
+                            </div>
+                        {/if}
+                        
+                        {if 1 == $skin_settings->productdetails->fb_chat}
+                            <div class="box row" id="box_facebookchat"></div>
+                        {/if}
+                    {else}
+                        <div class="alert-error alert">
+                            <p>{translate key="This product is unavailable."}</p>
+                        </div>
+                    {/if}
+                    
+                    {if $boxes_bottom_side|@count > 0}
+                    <div data-boxes-side="2">
+                    {dynamic}
+                        {foreach from=$boxes_bottom_side item=v key=k}
+                            {box file="../boxes/$v/box.tpl" box="$k"}
+                        {/foreach}
+                    {/dynamic}
+                    </div>
+                    {/if}
+                </div>
+
+                {if 0 < $boxes_right_side|@count}
+                    <div class="rightcol large s-grid-3">
+                        {dynamic}
+                            {foreach from=$boxes_right_side item=v key=k}
+                                {box file="../boxes/$v/box.tpl" box="$k"}
+                            {/foreach}
+                        {/dynamic}
+                    </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+
+    {if $product->isBundle()}      
+        <div class="bundle-fixed-cart">
+            <div class="bundle-fixed-cart-container{if false == $product->canBuyStock()} none{/if}">
+                <div class="bundle-header">
+                    <span class="bundle-name"><strong>{$product->translation->name|escape}</strong></span>
+                    <span class="bundle-selected">{translate key="Choose product variants"} (<span class="bundle-selected-item">1</span>/{$product->bundle->items|@count})</span>
+                </div>
+
+                <div class="bundle-cart">
+                    <input name="quantity" value="1" type="text" class="fixed-cart-quantity">
+                    <button id="fixed-cart-add" class="btn btn-red">{translate key="Add to cart"}</button>
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    {literal}
+    <script type="text/javascript">
+    jQuery(function($) {
+        /* //mod - maxsote - multiwybor wariantow */
+
+        function calcValue()
+        {
+            $(".options-value span#value").empty();
+
+            let currentValue = 0;
+            $(".stocks table tr:not(.index)").each(function()
+            {
+                let price = parseFloat($(this).find(".cell_price div").text().replace(",", ".").replace(" zł", "").replace(/\s/g, ""));
+                let quantity = parseInt($(this).find('.cell_quantity input').val());
+                currentValue += price * quantity;
+
+            });
+            $(".options-value span#value").text((currentValue).toFixed(2).replace(".", ",") + " zł");
+        }
+
+        calcValue();
+
+        /* //mod - maxsote - multiwybor wariantow */
+            if ($(".stocks table").length)
+            {
+                $("fieldset.addtobasket-container .quantity_wrap").hide().next().css("width", "100%");
+            }
+
+            let options_weight = [];
+            $("table.stocks_table tr:not(.index)").each(function()
+            {
+                let option_id = $(this).find(".cell_options input.options").val();
+                let option_weight = parseFloat($(this).find(".cell_options > div").text());
+
+                options_weight[option_weight] = option_id;
+            });
+            
+            var keys = Object.keys(options_weight).sort(function(a, b)
+            {
+                return parseFloat(a) - parseFloat(b);
+            });
+
+            let options_order = [];
+            for (let order in keys)
+            {
+                options_order[options_weight[keys[order]]] = order; 
+            }
+
+            
+            $("table.stocks_table tr:not(.index)").each(function()
+            {
+                let currentRow = $(this);
+
+                let id = currentRow.find(".cell_options input.options").val();
+                console.log(id);
+                let order = options_order[id];
+                console.log(order);
+                currentRow.css('order', order);
+
+                currentRow.find(".mx_ilosc i.fa").on('click', function()
+                {
+                    let currentVal = parseInt(currentRow.find(".mx_ilosc input").val());
+                    if ($(this).hasClass('mx_minus'))
+                    {
+                        currentVal--;
+                    }
+                    else if ($(this).hasClass('mx_plus'))
+                    {
+                        currentVal++;
+                    }
+
+                    currentRow.find(".mx_ilosc input").val(currentVal).change();
+                });
+
+                currentRow.find(".mx_ilosc input").on('change', function()
+                {
+                    calcValue();
+                });
+            });
+
+            $("fieldset.addtobasket-container button.addtobasket").on('click', function(e)
+            {
+                if ($("table.stocks_table").length)
+                {
+                    e.preventDefault();
+                    $(".stocks table tr:not(.index)").each(function()
+                    {
+                        let currentOption = $(this);
+                        let stock_id = currentOption.data('id');
+                        let quantity = currentOption.find(".mx_ilosc input").val();
+                        let options = JSON.parse(currentOption.find(".options").val());
+
+                        if (quantity > 0)
+                        {
+                            frontAPI.addToBasket(function(response)
+                            {
+                                currentOption.find(".mx_ilosc input").val(0).change();
+                                refreshBasket();
+                            },
+                            {
+                                data: {
+                                    stock_id: stock_id,
+                                    quantity: quantity,
+                                    options: options
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+        function refreshBasket()
+        {
+            frontAPI.getBasketInfo(function(basket)
+            {
+                let html = '';
+                let sumQuantity = 0;
+                for(let i = 0; i < basket.products.length; i++)
+                {
+                    let product = basket.products[i];
+                    html += '<li>';
+                    html += '   <img src="/userdata/gfx/'+product.image+'.jpg"/>';
+                    html += '   <span class="mod_basket_prod_name product-name">';
+                    html += '       '+product.name;
+                    html += '       <span class="product-variant">'+product.variant+'</span>';
+                    html += '   </span>';
+                    html += '   <span class="product-info">';
+                    html += '       <span class="product-amount">';
+                    html += '           '+product.quantity;
+                    html += '       </span>';
+                    html += '       <span class="product_price"> x '+product.price+'</span>';
+                    html += '   </span>';
+                    html += '   <span ';
+                    html += '       type="button" ';
+                    html += '       class="remove-product" ';
+                    html += '       data-product-basket-id="'+product.id+'" ';
+                    html += '       data-product-id="'+product.product_id+'" ';
+                    html += '   >';
+                    html += '       <a href="#">Usuń</a>';
+                    html += '   </span>';
+                    html += '</li>';
+                    sumQuantity += product.quantity
+                };
+                $('.basket-product-list').html(html);
+                $('.price-total').html('Suma: '+basket.basket.sum_no_shipping);
+                if($('div.basket.right > a > span > b > b.sum').length == 0){
+                    $('div.basket.right > a > span > b').html('<b class="sum">0,00&nbsp;zł</b> <b class="count">(<span>0</span>)</b>');
+                }
+                $('div.basket.right > a > span > b > b.sum').html(basket.basket.sum_no_shipping);
+                $('div.basket.right > a > span > b > b.count > span').text(sumQuantity);
+                $('.remove-product').unbind().on('click.remove', function()
+                {
+                    var basket_product_id = $(this).data('product-basket-id');
+                    frontAPI.removeFromBasket(function(removeInfo) {
+                        refreshBasket();
+                    }, {
+                        id: basket_product_id,
+                    }); 
+                });
+            },{});
+        }
+        /* //endmod - maxsote - multiwybor wariantow */
+    </script>
+    {/literal}
+
+    <script type="text/javascript">
+        try {literal}{{/literal} Shop.values.OptionsConfiguration = "{$options_configuration|escape}"; Shop.values.OptionsDefault = "{$options_default|escape}"; Shop.values.OptionCurrentStock = "{$stock_id|escape}"; Shop.values.optionCurrentVirt = "default"; Shop.values.OptionImgWidth = "{$skin_settings->img->big|escape}"; Shop.values.OptionImgHeight = "{$skin_settings->img->big|escape}"; {literal}}{/literal} catch(e) {literal}{ }{/literal}
+    </script>
+{include file='footerbox.tpl'}
+{include file='footer.tpl' force_include_cache='1' force_include_cache_tags='Logic_SkinFooterGroupList,Logic_SkinFooterLinkList,Logic_SkinFooterGroup,Logic_SkinFooterLink'}
+{plugin module=shop template=footer}
+
+{if $xfbml}
+    <div id="fb-root"></div>
+    <script type="text/javascript">
+        if($('#box_facebookchat')) $('#box_facebookchat').html('<fb:comments width="' + $('#box_facebookchat').width() + '" href="{route full=true function='product' key=$product->product->product_id productName=$product->translation->name productId=$product->product->product_id}" num_posts="10"></fb:comments>');
+    </script>
+    <script src="//connect.facebook.net/{lang key='long'}/all.js#xfbml=1"></script>
+{/if}
+
+{if 1 == $skin_settings->productdetails->google_p1}
+    <script type="text/javascript" src="https://apis.google.com/js/plusone.js">{literal}{{/literal}lang: '{lang key='short'}'{literal}}{/literal}</script>
+{/if}
+
+{if 1 == $skin_settings->productdetails->pinit}
+    <script type="text/javascript" src="//assets.pinterest.com/js/pinit.js"></script>
+{/if}
+{include file='switch.tpl'}
+
+{$snippet_product}
+</body>
+</html>

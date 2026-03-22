@@ -1,0 +1,57 @@
+.top > .container{
+  width: 1180px; 
+}
+@media screen and (max-width: 1200px){
+  .top > .container {
+      width: 940px;
+  }
+}
+@media screen and (max-width: 979px) and (min-width: 768px){
+  .top > .container{
+        width: 700px;
+  }
+}
+@media screen and (max-width: 767px){
+  .top > .container{
+        width: 100%;
+  }
+}
+.shop_index .menu{
+  margin-bottom: 20px;
+}
+
+/* MOD VARIANTS */
+
+.mvt-tab{width: 100%;}
+.mvt-tab tbody tr:nth-child(even){background: #ddd; border: 1px solid #888;}
+.mvt-tab tbody tr:nth-child(odd){background: #d8d8d8; border: 1px solid #888;}
+.mvt-tab thead tr td{border: 1px solid #888;text-align: center;background: #d1a737;color: #fff;padding: 5px 0px;}
+.mvt-tab tbody tr td input{border: 0px;width: 50px;text-align: center;border-radius: 5px; border: 1px solid; margin: 0px;height: 30px !important;min-height: 30px !important;}
+.mvt-tab tbody tr td{padding: 4px; text-align: center; border: 1px solid #888; background: #fff;}
+.mod-variants-table{margin-bottom: 20px; margin-top: 20px;}
+.mvt-stock_quantity{position: relative;}
+.fa-minus{position: absolute;top: 0;bottom: 0;margin: auto;height: 13px;left: 12px;line-height: 13px;}
+.fa-plus{position: absolute;top: 0;bottom: 0;margin: auto;height: 13px;right: 12px;line-height: 13px;}
+.fa-minus:before{font-size: 10px; color: #fff;text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;}
+.fa-plus:before{font-size: 10px; color: #fff;text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;}
+.fa{cursor: pointer;}
+.mod_basket_loading { position: fixed; left: 10px; bottom: 10px; display: none; z-index: 99999999999;}
+.mod_basket_add_all{float: right; margin-bottom: 20px; width: 100%;text-align: center;background-color: #d1a737;border: 1px solid #000;padding: 10px 0px;color: #fff; cursor: pointer;}
+.mod_basket_add_all:hover{background-color: #444;border-color: #444;}
+.mod_basket_info{position: fixed; left: 140px; bottom: 10px; display: none; padding: 10px 20px; background: #000; color: #fff; font-weight: 600; padding-right: 0px; cursor: pointer; z-index: 99999999;}
+.mod_basket_info::after{content: "x";font-size: 17px;font-weight: bold;margin-left: 15px;text-transform: lowercase;cursor: pointer;z-index: 999999;position: absolute;height: 20px;top: 0px;width: 45px;text-align: center;right: -45px;bottom: 0;margin: auto;background: #000;padding: 9px 0px;}
+.mx_mcc-color a{width: 25px; height: 25px; display: inline-block; border: 2px solid #000;}
+.mx_mod-chosen-color div{display: inline-block; margin-right: 15px; vertical-align: middle;}
+.mx_mod-chosen-color{position: relative;top: -45px;}
+.mx_mcc-header{margin-right: 90px !important;}
+.mx_mod-addtobasket-container{display: none;position: fixed;background: #fff;z-index: 9999;left: 0;right: 0;top: 0;width: 465px;margin: auto;bottom: 0px;height: 130px;}
+.mx_mod-mask{display: none;-webkit-transition: opacity 0.2s linear;-moz-transition: opacity 0.2s linear;-o-transition: opacity 0.2s linear;transition: opacity 0.2s linear;z-index: 9000;position: fixed;top: 0;bottom: 0;left: 0;right: 0;background-color: rgba(0,0,0,0);background-image: radial-gradient(ellipse farthest-corner at center center,rgba(127,127,127,0.5),rgba(127,127,127,0.5) 35%,rgba(0,0,0,0.7) 100%) !important;}
+.mx_mod-pagereload{float: right !important;}
+.mx_summary{margin-bottom: 20px; display: inline-block;font-size: 19px;font-weight: bold;}
+.mxs-txt{display: inline-block;}
+.mxs-sum-all-options{display: inline-block; margin-left: 20px;color:#d1a737}
+
+/* Poprawki Maxsote */
+
+header .login-bar{margin-top: 0px;}
+.menu .innermenu #fx-log-li h3 a.active::before{content: '\f007' !important;}
